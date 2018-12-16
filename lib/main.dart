@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:card_flip_carousel/card_data.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key key, this.title}): super(key: key);
   final String title;
 
   @override
@@ -38,7 +39,9 @@ class _MyHomePageState extends State<MyHomePage> {
             height: 20.0,
           ),
           Expanded(
-            child: CardFlipper(),
+            child: CardFlipper(
+              cards: demoCards,
+            ),
           ),
           Container(
             width: double.infinity,
@@ -52,12 +55,16 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class CardFlipper extends StatefulWidget {
+  CardFlipper({Key key, this.cards}): super(key: key);
+
+  final List<CardViewModel> cards;
+
   @override
   _CardFlipperState createState() => _CardFlipperState();
 }
 
 class _CardFlipperState extends State<CardFlipper> with TickerProviderStateMixin {
-  final _cardCount = 3;
+  var _cardCount = 0;
   var _scrollPercent = 0.0;
   var _scrollStart = 0.0;
   var _finishScrollStart = 0.0;
@@ -67,6 +74,8 @@ class _CardFlipperState extends State<CardFlipper> with TickerProviderStateMixin
   @override
   void initState() {
     super.initState();
+    _cardCount = widget.cards.length;
+
     _finishScrollController = AnimationController(vsync: this, duration: const Duration(milliseconds: 150))
       ..addListener(() {
         setState(() {
@@ -108,21 +117,22 @@ class _CardFlipperState extends State<CardFlipper> with TickerProviderStateMixin
   }
 
   List<Widget> _buildCards() {
-    return [
-      _buildCard(0),
-      _buildCard(1),
-      _buildCard(2),
-    ];
+    var index = 0;
+
+    return widget.cards.map((card) {
+      return _buildCard(index++, card);
+    }).toList();
   }
 
-  Widget _buildCard(int index) {
+  Widget _buildCard(int index, CardViewModel card) {
     final cardScrollPercent = _scrollPercent / (1 / _cardCount);
+    final parallaxPercent = _scrollPercent - (index / _cardCount);
 
     return FractionalTranslation(
       translation: Offset(index - cardScrollPercent, 0.0),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Card(),
+        child: Card(card: card, parallaxPercent: parallaxPercent),
       ),
     );
   }
@@ -142,14 +152,29 @@ class _CardFlipperState extends State<CardFlipper> with TickerProviderStateMixin
 }
 
 class Card extends StatelessWidget {
+  Card({
+    Key key,
+    this.card,
+    this.parallaxPercent = 0.0,
+  }): super(key: key);
+
+  final card;
+  final parallaxPercent;
+
   @override
   Widget build(BuildContext context) {
     return Stack(fit: StackFit.expand, children: <Widget>[
       ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: Image.asset(
-          'assets/board_walk.jpg',
-          fit: BoxFit.cover,
+        child: FractionalTranslation(
+          translation: Offset(parallaxPercent, 0.0),
+          child: OverflowBox(
+            maxWidth: double.infinity,
+            child: Image.asset(
+              card.backdropAssetPath,
+              fit: BoxFit.cover,
+            ),
+          ),
         ),
       ),
       Flex(
@@ -162,7 +187,7 @@ class Card extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Text(
-                  '10TH street'.toUpperCase(),
+                  card.address.toUpperCase(),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20.0,
@@ -181,7 +206,7 @@ class Card extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    '2 - 3',
+                    '${card.minHeightInFeet} - ${card.maxHeightInFeet}',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 140.0,
@@ -214,7 +239,7 @@ class Card extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '33℃',
+                    '${card.tempInDegrees}°',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20.0,
@@ -242,7 +267,7 @@ class Card extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Text(
-                    'Mostly cloud',
+                    card.weatherType,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20.0,
@@ -259,7 +284,7 @@ class Card extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '11.2mph ENE',
+                    '${card.windSpeedInMph}mph ${card.cardinalDirection}',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20.0,
