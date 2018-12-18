@@ -43,16 +43,44 @@ class _MyHomePageState extends State<MyHomePage> {
               cards: demoCards,
             ),
           ),
-          Container(
-            width: double.infinity,
-            height: 50.0,
-            color: Colors.grey,
+          PageFooter(cardCount: 0, scrollPercent: 0.0),
+        ],
+      ),
+    );
+  }
+}
+
+class PageFooter extends StatelessWidget {
+  PageFooter({
+    Key key,
+    this.cardCount,
+    this.scrollPercent,
+  }): super(key: key);
+
+  final cardCount;
+  final scrollPercent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 15.0),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Icon(Icons.settings, color: Colors.white),
+          ),
+          Expanded(
+            child: Container(),
+          ),
+          Expanded(
+            child: Icon(Icons.add, color: Colors.white),
           )
         ],
       ),
     );
   }
 }
+
 
 class CardFlipper extends StatefulWidget {
   CardFlipper({Key key, this.cards}): super(key: key);
